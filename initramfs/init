@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Mount kernel filesystems
+busybox mount -t proc proc /proc
+busybox mount -t sysfs sys /sys
+busybox mount -t devtmpfs dev /dev
+
+# Mount real root filesystem
+busybox mount /dev/sda /newroot || exec busybox sh
+
+# Switch to real root
+exec busybox switch_root /newroot /sbin/init
