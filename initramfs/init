@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Mount kernel virtual filesystems
+mount -t proc proc /proc
+mount -t sysfs sys /sys
+
+# Mount the real root filesystem (rootfs)
+mount /dev/sda /newroot || exec sh
+
+# Switch to the real root and run its init
+exec switch_root /newroot /sbin/init
