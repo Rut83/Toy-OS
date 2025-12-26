@@ -53,7 +53,6 @@ static void shutdown_system(int cmd)
         pause();
 }
 
-/* ---------- Mount core filesystems ---------- */
 static void mount_fs(void)
 {
     mount("proc",     "/proc", "proc",     0, NULL);
@@ -61,30 +60,29 @@ static void mount_fs(void)
     mount("devtmpfs", "/dev",  "devtmpfs", 0, NULL);
 }
 
-/* ---------- Spawn shell ---------- */
-static pid_t spawn_shell(void)
+static pid_t spawn_getty(const char *tty)
 {
     pid_t pid = fork();
     if (pid == 0) {
-        execl("/bin/sh", "sh", NULL);
+        execl("/bin/getty", "getty", tty, NULL);
+
         _exit(127);
     }
     return pid;
 }
 
-/* ---------- Main ---------- */
 int main(void)
 {
-    pid_t shell_pid;
     int status;
     write(1, ">>> CUSTOM INIT RUNNING <<<\n", 28);
-
-
+    
     setup_signals();
-
-
     mount_fs();
-    shell_pid = spawn_shell();
+
+    pid_t tty1 = spawn_getty("/dev/tty1");
+    pid_t tty2 = spawn_getty("/dev/tty2");
+
+
 
     for (;;) {
     pid_t pid = wait(&status);
@@ -102,9 +100,13 @@ int main(void)
         continue;
     }
 
-    if (pid == shell_pid) {
-        shell_pid = spawn_shell();
-    }
+    if (pid == tty1)
+        tty1 = spawn_getty("/dev/tty1");
+
+    else if (pid == tty2)
+        tty2 = spawn_getty("/dev/tty2");
+
+
 }
 
 }
